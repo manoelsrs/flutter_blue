@@ -24,6 +24,10 @@ class FlutterBlue {
   static FlutterBlue _instance = new FlutterBlue._();
   static FlutterBlue get instance => _instance;
 
+  static reinitialize() {
+    _instance = new FlutterBlue._();
+  }
+
   /// Log level of the instance, default is all messages (debug).
   LogLevel _logLevel = LogLevel.debug;
   LogLevel get logLevel => _logLevel;
@@ -86,7 +90,7 @@ class FlutterBlue {
   /// timeout calls stopStream after a specified [Duration].
   /// You can also get a list of ongoing results in the [scanResults] stream.
   /// If scanning is already in progress, this will throw an [Exception].
-  Stream<ScanResult> scan({
+  Stream<BluetoothDevice> scan({
     ScanMode scanMode = ScanMode.lowLatency,
     List<Guid> withServices = const [],
     List<Guid> withDevices = const [],
@@ -123,6 +127,10 @@ class FlutterBlue {
       throw e;
     }
 
+    for (final device in await connectedDevices) {
+      yield device;
+    }
+
     yield* FlutterBlue.instance._methodStream
         .where((m) => m.method == "ScanResult")
         .map((m) => m.arguments)
@@ -139,7 +147,7 @@ class FlutterBlue {
         list.add(result);
       }
       _scanResults.add(list);
-      return result;
+      return result.device;
     });
   }
 
